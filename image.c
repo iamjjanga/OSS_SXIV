@@ -47,7 +47,7 @@ float zoom_max; // ÃÖ´ë Zoom °ª
 
 static int zoomdiff(img_t *img, float z)
 {
-	return (int)((img->w * z - img->w * img->zoom) + (img->h * z - img->h * img->zoom));
+	return (int)((img->w + img->h) * (z - img->zoom));
 }
 
 void img_init(img_t *img, win_t *win)
