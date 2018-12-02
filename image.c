@@ -1,20 +1,20 @@
 /* Copyright 2011, 2012 Bert Muennich
- *
- * This file is part of sxiv.
- *
- * sxiv is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published
- * by the Free Software Foundation; either version 2 of the License,
- * or (at your option) any later version.
- *
- * sxiv is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with sxiv.  If not, see <http://www.gnu.org/licenses/>.
- */
+*
+* This file is part of sxiv.
+*
+* sxiv is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published
+* by the Free Software Foundation; either version 2 of the License,
+* or (at your option) any later version.
+*
+* sxiv is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with sxiv.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "sxiv.h"
 #define _IMAGE_CONFIG
@@ -36,12 +36,18 @@
 enum { DEF_GIF_DELAY = 75 };
 #endif
 
-float zoom_min;
-float zoom_max;
+float zoom_min; // 최소 Zoom 값
+float zoom_max; // 최대 Zoom 값
+
+				/*
+				현재 이미지가 목표하는 ZoomLevel(z)와 다른지 비교하여 양수면 현재 Zoomlevel보다 높고
+				0이면 현재 Zoomlevel과 같고
+				음수면 현재 Zoomlevel보다 낮다.
+				*/
 
 static int zoomdiff(img_t *img, float z)
 {
-	return (int) ((img->w * z - img->w * img->zoom) + (img->h * z - img->h * img->zoom));
+	return (int)((img->w * z - img->w * img->zoom) + (img->h * z - img->h * img->zoom));
 }
 
 void img_init(img_t *img, win_t *win)
@@ -92,25 +98,25 @@ void exif_auto_orientate(const fileinfo_t *file)
 	exif_data_unref(ed);
 
 	switch (orientation) {
-		case 5:
-			imlib_image_orientate(1);
-		case 2:
-			imlib_image_flip_vertical();
-			break;
-		case 3:
-			imlib_image_orientate(2);
-			break;
-		case 7:
-			imlib_image_orientate(1);
-		case 4:
-			imlib_image_flip_horizontal();
-			break;
-		case 6:
-			imlib_image_orientate(1);
-			break;
-		case 8:
-			imlib_image_orientate(3);
-			break;
+	case 5:
+		imlib_image_orientate(1);
+	case 2:
+		imlib_image_flip_vertical();
+		break;
+	case 3:
+		imlib_image_orientate(2);
+		break;
+	case 7:
+		imlib_image_orientate(1);
+	case 4:
+		imlib_image_flip_horizontal();
+		break;
+	case 6:
+		imlib_image_orientate(1);
+		break;
+	case 8:
+		imlib_image_orientate(3);
+		break;
 	}
 }
 #endif
@@ -138,7 +144,7 @@ bool img_load_gif(img_t *img, const fileinfo_t *file)
 	if (img->multi.cap == 0) {
 		img->multi.cap = 8;
 		img->multi.frames = (img_frame_t*)
-		                    emalloc(sizeof(img_frame_t) * img->multi.cap);
+			emalloc(sizeof(img_frame_t) * img->multi.cap);
 	}
 	img->multi.cnt = img->multi.sel = 0;
 	img->multi.length = 0;
@@ -170,17 +176,18 @@ bool img_load_gif(img_t *img, const fileinfo_t *file)
 			while (ext) {
 				if (ext_code == GRAPHICS_EXT_FUNC_CODE) {
 					if (ext[1] & 1)
-						transp = (int) ext[4];
+						transp = (int)ext[4];
 					else
 						transp = -1;
 
-					delay = 10 * ((unsigned int) ext[3] << 8 | (unsigned int) ext[2]);
-					disposal = (unsigned int) ext[1] >> 2 & 0x7;
+					delay = 10 * ((unsigned int)ext[3] << 8 | (unsigned int)ext[2]);
+					disposal = (unsigned int)ext[1] >> 2 & 0x7;
 				}
 				ext = NULL;
 				DGifGetExtensionNext(gif, &ext);
 			}
-		} else if (rec == IMAGE_DESC_RECORD_TYPE) {
+		}
+		else if (rec == IMAGE_DESC_RECORD_TYPE) {
 			if (DGifGetImageDesc(gif) == GIF_ERROR) {
 				err = true;
 				break;
@@ -190,20 +197,21 @@ bool img_load_gif(img_t *img, const fileinfo_t *file)
 			w = gif->Image.Width;
 			h = gif->Image.Height;
 
-			rows = (GifRowType*) emalloc(h * sizeof(GifRowType));
+			rows = (GifRowType*)emalloc(h * sizeof(GifRowType));
 			for (i = 0; i < h; i++)
-				rows[i] = (GifRowType) emalloc(w * sizeof(GifPixelType));
+				rows[i] = (GifRowType)emalloc(w * sizeof(GifPixelType));
 			if (gif->Image.Interlace) {
 				for (i = 0; i < 4; i++) {
 					for (j = intoffset[i]; j < h; j += intjump[i])
 						DGifGetLine(gif, rows[j], w);
 				}
-			} else {
+			}
+			else {
 				for (i = 0; i < h; i++)
 					DGifGetLine(gif, rows[i], w);
 			}
 
-			ptr = data = (DATA32*) emalloc(sizeof(DATA32) * sw * sh);
+			ptr = data = (DATA32*)emalloc(sizeof(DATA32) * sw * sh);
 			cmap = gif->Image.ColorMap ? gif->Image.ColorMap : gif->SColorMap;
 			r = cmap->Colors[bg].Red;
 			g = cmap->Colors[bg].Green;
@@ -213,19 +221,21 @@ bool img_load_gif(img_t *img, const fileinfo_t *file)
 			for (i = 0; i < sh; i++) {
 				for (j = 0; j < sw; j++) {
 					if (i < y || i >= y + h || j < x || j >= x + w ||
-					    rows[i-y][j-x] == transp)
+						rows[i - y][j - x] == transp)
 					{
 						if (prev_frame != NULL && (prev_disposal != 2 ||
-						    i < py || i >= py + ph || j < px || j >= px + pw))
+							i < py || i >= py + ph || j < px || j >= px + pw))
 						{
 							*ptr = prev_frame[i * sw + j];
-						} else {
+						}
+						else {
 							*ptr = bgpixel;
 						}
-					} else {
-						r = cmap->Colors[rows[i-y][j-x]].Red;
-						g = cmap->Colors[rows[i-y][j-x]].Green;
-						b = cmap->Colors[rows[i-y][j-x]].Blue;
+					}
+					else {
+						r = cmap->Colors[rows[i - y][j - x]].Red;
+						g = cmap->Colors[rows[i - y][j - x]].Green;
+						b = cmap->Colors[rows[i - y][j - x]].Blue;
 						*ptr = 0xffu << 24 | r << 16 | g << 8 | b;
 					}
 					ptr++;
@@ -257,8 +267,8 @@ bool img_load_gif(img_t *img, const fileinfo_t *file)
 			if (img->multi.cnt == img->multi.cap) {
 				img->multi.cap *= 2;
 				img->multi.frames = (img_frame_t*)
-				                    erealloc(img->multi.frames,
-				                             img->multi.cap * sizeof(img_frame_t));
+					erealloc(img->multi.frames,
+						img->multi.cap * sizeof(img_frame_t));
 			}
 			img->multi.frames[img->multi.cnt].im = im;
 			delay = img->multi.framedelay > 0 ? img->multi.framedelay : delay;
@@ -281,7 +291,8 @@ bool img_load_gif(img_t *img, const fileinfo_t *file)
 		imlib_context_set_image(img->im);
 		imlib_free_image();
 		img->im = img->multi.frames[0].im;
-	} else if (img->multi.cnt == 1) {
+	}
+	else if (img->multi.cnt == 1) {
 		imlib_context_set_image(img->multi.frames[0].im);
 		imlib_free_image();
 		img->multi.cnt = 0;
@@ -299,7 +310,7 @@ Imlib_Image img_open(const fileinfo_t *file)
 	Imlib_Image im = NULL;
 
 	if (access(file->path, R_OK) == 0 &&
-	    stat(file->path, &st) == 0 && S_ISREG(st.st_mode))
+		stat(file->path, &st) == 0 && S_ISREG(st.st_mode))
 	{
 		im = imlib_load_image(file->path);
 		if (im != NULL) {
@@ -353,7 +364,8 @@ CLEANUP void img_close(img_t *img, bool decache)
 		}
 		img->multi.cnt = 0;
 		img->im = NULL;
-	} else if (img->im != NULL) {
+	}
+	else if (img->im != NULL) {
 		imlib_context_set_image(img->im);
 		if (decache)
 			imlib_free_image_and_decache();
@@ -398,19 +410,19 @@ bool img_fit(img_t *img)
 	if (img->scalemode == SCALE_ZOOM)
 		return false;
 
-	zw = (float) img->win->w / (float) img->w;
-	zh = (float) img->win->h / (float) img->h;
+	zw = (float)img->win->w / (float)img->w;
+	zh = (float)img->win->h / (float)img->h;
 
 	switch (img->scalemode) {
-		case SCALE_WIDTH:
-			z = zw;
-			break;
-		case SCALE_HEIGHT:
-			z = zh;
-			break;
-		default:
-			z = MIN(zw, zh);
-			break;
+	case SCALE_WIDTH:
+		z = zw;
+		break;
+	case SCALE_HEIGHT:
+		z = zh;
+		break;
+	default:
+		z = MIN(zw, zh);
+		break;
 	}
 	z = MIN(z, img->scalemode == SCALE_DOWN ? 1.0 : zoom_max);
 
@@ -418,7 +430,8 @@ bool img_fit(img_t *img)
 		img->zoom = z;
 		img->dirty = true;
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
@@ -443,15 +456,16 @@ void img_render(img_t *img)
 		return;
 
 	/* calculate source and destination offsets:
-	 *   - part of image drawn on full window, or
-	 *   - full image drawn on part of window
-	 */
+	*   - part of image drawn on full window, or
+	*   - full image drawn on part of window
+	*/
 	if (img->x <= 0) {
 		sx = -img->x / img->zoom + 0.5;
 		sw = win->w / img->zoom;
 		dx = 0;
 		dw = win->w;
-	} else {
+	}
+	else {
 		sx = 0;
 		sw = img->w;
 		dx = img->x;
@@ -462,7 +476,8 @@ void img_render(img_t *img)
 		sh = win->h / img->zoom;
 		dy = 0;
 		dh = win->h;
-	} else {
+	}
+	else {
 		sy = 0;
 		sh = img->h;
 		dy = img->y;
@@ -491,12 +506,14 @@ void img_render(img_t *img)
 				if (r == 0 || r == 8) {
 					for (c = 0; c < dw; c++)
 						data[i++] = col[!(c & 8) ^ !r];
-				} else {
+				}
+				else {
 					memcpy(&data[i], &data[(r & 8) * dw], dw * sizeof(data[0]));
 				}
 			}
 			imlib_image_put_back_data(data);
-		} else {
+		}
+		else {
 			c = win->fullscreen ? win->fscol.pixel : win->bgcol.pixel;
 			imlib_context_set_color(c >> 16 & 0xFF, c >> 8 & 0xFF, c & 0xFF, 0xFF);
 			imlib_image_fill_rectangle(0, 0, dw, dh);
@@ -506,7 +523,8 @@ void img_render(img_t *img)
 		imlib_render_image_on_drawable(dx, dy);
 		imlib_free_image();
 		imlib_context_set_color_modifier(img->cmod);
-	} else {
+	}
+	else {
 		imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
 	}
 	img->dirty = false;
@@ -524,10 +542,17 @@ bool img_fit_win(img_t *img, scalemode_t sm)
 		img->y = img->win->h / 2 - (img->win->h / 2 - img->y) * img->zoom / oz;
 		img->checkpan = true;
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
+
+/*
+이미지를 zoom하는 함수.
+img_t 구조체 img와 어느정도로 zoom in 혹은 out할것인지 결정하는 zoomlevel z값을 인자로 받아서
+이미지의 시작위치(img->x, img->y 및 img zoomlevel과 이미지 수정 flage 재설정
+*/
 
 bool img_zoom(img_t *img, float z)
 {
@@ -536,7 +561,7 @@ bool img_zoom(img_t *img, float z)
 
 	img->scalemode = SCALE_ZOOM;
 
-	if (zoomdiff(img, z) != 0) {
+	if (zoomdiff(img, z) != 0) { // img가 zoomlevel이 z가 아니면
 		int x, y;
 
 		win_cursor_pos(img->win, &x, &y);
@@ -550,17 +575,23 @@ bool img_zoom(img_t *img, float z)
 		img->checkpan = true;
 		img->dirty = true;
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
 
+
+/*
+Zoom In을 실행하는 함수.
+zoom_levels 배열에서 현재 zoom_level보다 한단계 높은 Zoom 수준을 알아내어서 해당 zoomlevel로 재조정
+*/
 bool img_zoom_in(img_t *img)
 {
 	int i;
 	float z;
 
-	for (i = 0; i < ARRLEN(zoom_levels); i++) {
+	for (i = 0; i < ARRLEN(zoom_levels); i++) { // zoom_levels는 zoom level들이 저장되어있는 배열. 
 		z = zoom_levels[i] / 100.0;
 		if (zoomdiff(img, z) > 0)
 			return img_zoom(img, z);
@@ -568,12 +599,17 @@ bool img_zoom_in(img_t *img)
 	return false;
 }
 
+/*
+Zoom Out을 실행하는 함수.
+zoom_levels 배열에서 현재 zoom_level보다 한단계 낮은 Zoom 수준을 알아내어서 해당 zoomlevel로 재조정
+*/
+
 bool img_zoom_out(img_t *img)
 {
 	int i;
 	float z;
 
-	for (i = ARRLEN(zoom_levels) - 1; i >= 0; i--) {
+	for (i = ARRLEN(zoom_levels) - 1; i >= 0; i--) { // zoom_levels는 zoom level들이 저장되어있는 배열. 역순으로 탐색
 		z = zoom_levels[i] / 100.0;
 		if (zoomdiff(img, z) < 0)
 			return img_zoom(img, z);
@@ -596,7 +632,8 @@ bool img_pos(img_t *img, float x, float y)
 	if (ox != img->x || oy != img->y) {
 		img->dirty = true;
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
@@ -609,27 +646,28 @@ bool img_move(img_t *img, float dx, float dy)
 bool img_pan(img_t *img, direction_t dir, int d)
 {
 	/* d < 0: screen-wise
-	 * d = 0: 1/PAN_FRACTION of screen
-	 * d > 0: num of pixels
-	 */
+	* d = 0: 1/PAN_FRACTION of screen
+	* d > 0: num of pixels
+	*/
 	float x, y;
 
 	if (d > 0) {
-		x = y = MAX(1, (float) d * img->zoom);
-	} else {
+		x = y = MAX(1, (float)d * img->zoom);
+	}
+	else {
 		x = img->win->w / (d < 0 ? 1 : PAN_FRACTION);
 		y = img->win->h / (d < 0 ? 1 : PAN_FRACTION);
 	}
 
 	switch (dir) {
-		case DIR_LEFT:
-			return img_move(img, x, 0.0);
-		case DIR_RIGHT:
-			return img_move(img, -x, 0.0);
-		case DIR_UP:
-			return img_move(img, 0.0, y);
-		case DIR_DOWN:
-			return img_move(img, 0.0, -y);
+	case DIR_LEFT:
+		return img_move(img, x, 0.0);
+	case DIR_RIGHT:
+		return img_move(img, -x, 0.0);
+	case DIR_UP:
+		return img_move(img, 0.0, y);
+	case DIR_DOWN:
+		return img_move(img, 0.0, -y);
 	}
 	return false;
 }
@@ -655,7 +693,8 @@ bool img_pan_edge(img_t *img, direction_t dir)
 	if (ox != img->x || oy != img->y) {
 		img->dirty = true;
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
@@ -675,7 +714,7 @@ void img_rotate(img_t *img, degree_t d)
 		}
 	}
 	if (d == DEGREE_90 || d == DEGREE_270) {
-		ox = d == DEGREE_90  ? img->x : img->win->w - img->x - img->w * img->zoom;
+		ox = d == DEGREE_90 ? img->x : img->win->w - img->x - img->w * img->zoom;
 		oy = d == DEGREE_270 ? img->y : img->win->h - img->y - img->h * img->zoom;
 
 		img->x = oy + (img->win->w - img->win->h) / 2;
@@ -692,7 +731,7 @@ void img_rotate(img_t *img, degree_t d)
 void img_flip(img_t *img, flipdir_t d)
 {
 	int i;
-	void (*imlib_flip_op[3])(void) = {
+	void(*imlib_flip_op[3])(void) = {
 		imlib_image_flip_horizontal,
 		imlib_image_flip_vertical,
 		imlib_image_flip_diagonal
@@ -726,9 +765,9 @@ void img_toggle_antialias(img_t *img)
 bool img_change_gamma(img_t *img, int d)
 {
 	/* d < 0: decrease gamma
-	 * d = 0: reset gamma
-	 * d > 0: increase gamma
-	 */
+	* d = 0: reset gamma
+	* d > 0: increase gamma
+	*/
 	int gamma;
 	double range;
 
@@ -746,7 +785,8 @@ bool img_change_gamma(img_t *img, int d)
 		img->gamma = gamma;
 		img->dirty = true;
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
