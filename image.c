@@ -27,6 +27,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+
+
+#define MAX_ZOOM_LEVEL 100
+
 #if HAVE_LIBEXIF
 #include <libexif/exif-data.h>
 #endif
@@ -52,8 +56,8 @@ static int zoomdiff(img_t *img, float z)
 
 void img_init(img_t *img, win_t *win)
 {
-	zoom_min = zoom_levels[0] / 100.0;
-	zoom_max = zoom_levels[ARRLEN(zoom_levels) - 1] / 100.0;
+	zoom_min = zoom_levels[0] / MAX_ZOOM_LEVEL;
+	zoom_max = zoom_levels[ARRLEN(zoom_levels) - 1] / MAX_ZOOM_LEVEL;
 
 	imlib_context_set_display(win->env.dpy);
 	imlib_context_set_visual(win->env.vis);
@@ -592,7 +596,7 @@ bool img_zoom_in(img_t *img)
 	float z;
 
 	for (i = 0; i < ARRLEN(zoom_levels); i++) { // zoom_levels는 zoom level들이 저장되어있는 배열. 
-		z = zoom_levels[i] / 100.0;
+		z = zoom_levels[i] / MAX_ZOOM_LEVEL;
 		if (zoomdiff(img, z) > 0)
 			return img_zoom(img, z);
 	}
