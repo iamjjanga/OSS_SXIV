@@ -1,20 +1,20 @@
 /* Copyright 2011, 2012, 2014 Bert Muennich
- *
- * This file is part of sxiv.
- *
- * sxiv is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published
- * by the Free Software Foundation; either version 2 of the License,
- * or (at your option) any later version.
- *
- * sxiv is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with sxiv.  If not, see <http://www.gnu.org/licenses/>.
- */
+*
+* This file is part of sxiv.
+*
+* sxiv is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published
+* by the Free Software Foundation; either version 2 of the License,
+* or (at your option) any later version.
+*
+* sxiv is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with sxiv.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "sxiv.h"
 #define _IMAGE_CONFIG
@@ -78,7 +78,8 @@ bool cg_switch_mode(arg_t _)
 		}
 		tns.dirty = true;
 		mode = MODE_THUMB;
-	} else {
+	}
+	else {
 		load_image(fileidx);
 		mode = MODE_IMAGE;
 	}
@@ -106,7 +107,8 @@ bool cg_toggle_bar(arg_t _)
 		else
 			close_info();
 		img.checkpan = img.dirty = true;
-	} else {
+	}
+	else {
 		tns.dirty = true;
 	}
 	return true;
@@ -122,7 +124,8 @@ bool cg_reload_image(arg_t _)
 {
 	if (mode == MODE_IMAGE) {
 		load_image(fileidx);
-	} else {
+	}
+	else {
 		win_set_cursor(&win, CURSOR_WATCH);
 		if (!tns_load(&tns, fileidx, true, false)) {
 			remove_file(fileidx, false);
@@ -147,11 +150,13 @@ bool cg_first(arg_t _)
 	if (mode == MODE_IMAGE && fileidx != 0) {
 		load_image(0);
 		return true;
-	} else if (mode == MODE_THUMB && fileidx != 0) {
+	}
+	else if (mode == MODE_THUMB && fileidx != 0) {
 		fileidx = 0;
 		tns.dirty = true;
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
@@ -163,11 +168,13 @@ bool cg_n_or_last(arg_t _)
 	if (mode == MODE_IMAGE && fileidx != n) {
 		load_image(n);
 		return true;
-	} else if (mode == MODE_THUMB && fileidx != n) {
+	}
+	else if (mode == MODE_THUMB && fileidx != n) {
 		fileidx = n;
 		tns.dirty = true;
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
@@ -180,6 +187,15 @@ bool cg_scroll_screen(arg_t dir)
 		return tns_scroll(&tns, dir, true);
 }
 
+
+/*
+키보드 & 마우스 인터럽트에 따른 sxiv 동작
+-> main 함수에서 cmds라는 구조체를 초기화하는데, 이는 commands.lst 에 있는 34개의 함수들을 함수 포인터로 초기화 함.
+-> 초기화를 마친 main 함수는 run() 함수에서 무한루프를 도는데, run 함수내에는 키보드 혹은 마우스 인터럽트를 대기하는 리눅스 함수가 있음.
+-> 키보드 인터럽트를 받은 경우 on_keypress(키이벤트) 함수가 호출됨, config.def.h 소스코드를 참조하면, 키보드 맵핑 관계(keymap_t keys[])가 선언되어있는데, 이를 토대로 어떤 키가 눌렸고, 함수를 어떤 인자를 주고 호출해야되는지 알아낸후 해당 함수 호출
+-> 마우스 인터럽트를 받은경우 on_buttonpress(버튼이벤트) 함수가 호출됨, config.def.h 소스코드를 참조하면, 마우스 맵핑 관계(button_t buttons[])가 선언되어있는데, 이를 토대로 어떤 키가 눌렸고, 함수를 어떤 인자를 주고 호출해야되는지 알아낸후 해당 함수 호출
+예를들어 '+'버튼을 사용자가 누른경우, kets[] 배열에 의하면 해당 key는 zoom 함수를 +1을 인자로 주어서 호출하라는 뜻(각 함수는 하나의 int형 변수를 인자로 받음)
+*/
 bool cg_zoom(arg_t d)
 {
 	if (mode == MODE_THUMB)
@@ -236,7 +252,7 @@ bool cg_navigate_marked(arg_t n)
 {
 	int d, i;
 	int new = fileidx;
-	
+
 	if (prefix > 0)
 		n *= prefix;
 	d = n > 0 ? 1 : -1;
@@ -249,12 +265,14 @@ bool cg_navigate_marked(arg_t n)
 	if (new != fileidx) {
 		if (mode == MODE_IMAGE) {
 			load_image(new);
-		} else {
+		}
+		else {
 			fileidx = new;
 			tns.dirty = true;
 		}
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
@@ -265,7 +283,8 @@ bool cg_change_gamma(arg_t d)
 		if (mode == MODE_THUMB)
 			tns.dirty = true;
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
@@ -283,7 +302,8 @@ bool ci_navigate(arg_t n)
 	if (n != fileidx) {
 		load_image(n);
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
@@ -315,7 +335,8 @@ bool ci_toggle_animation(arg_t _)
 		if (img.multi.animate) {
 			dirty = img_frame_animate(&img);
 			set_timeout(animate, img.multi.frames[img.multi.sel].delay, true);
-		} else {
+		}
+		else {
 			reset_timeout(animate);
 		}
 	}
@@ -340,7 +361,7 @@ bool ci_drag(arg_t mode)
 
 	if ((int)(img.w * img.zoom) <= win.w && (int)(img.h * img.zoom) <= win.h)
 		return false;
-	
+
 	win_set_cursor(&win, CURSOR_DRAG);
 
 	win_cursor_pos(&win, &x, &y);
@@ -350,10 +371,11 @@ bool ci_drag(arg_t mode)
 	for (;;) {
 		if (mode == DRAG_ABSOLUTE) {
 			px = MIN(MAX(0.0, x - win.w*0.1), win.w*0.8) / (win.w*0.8)
-			   * (win.w - img.w * img.zoom);
+				* (win.w - img.w * img.zoom);
 			py = MIN(MAX(0.0, y - win.h*0.1), win.h*0.8) / (win.h*0.8)
-			   * (win.h - img.h * img.zoom);
-		} else {
+				* (win.h - img.h * img.zoom);
+		}
+		else {
 			px = img.x + x - ox;
 			py = img.y + y - oy;
 		}
@@ -363,7 +385,7 @@ bool ci_drag(arg_t mode)
 			win_draw(&win);
 		}
 		XMaskEvent(win.env.dpy,
-		           ButtonPressMask | ButtonReleaseMask | PointerMotionMask, &e);
+			ButtonPressMask | ButtonReleaseMask | PointerMotionMask, &e);
 		if (e.type == ButtonPress || e.type == ButtonRelease)
 			break;
 		while (XCheckTypedEvent(win.env.dpy, MotionNotify, &e));
@@ -419,10 +441,12 @@ bool ci_slideshow(arg_t _)
 		img.ss.on = true;
 		img.ss.delay = prefix * 10;
 		set_timeout(slideshow, img.ss.delay * 100, true);
-	} else if (img.ss.on) {
+	}
+	else if (img.ss.on) {
 		img.ss.on = false;
 		reset_timeout(slideshow);
-	} else {
+	}
+	else {
 		img.ss.on = true;
 	}
 	return true;
