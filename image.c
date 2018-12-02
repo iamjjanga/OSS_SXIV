@@ -382,13 +382,13 @@ CLEANUP void img_close(img_t *img, bool decache)
 void img_check_pan(img_t *img, bool moved)
 {
 	win_t *win;
-	float w, h, ox, oy;
+	float w, h, tmp_x, tmp_y;
 
 	win = img->win;
 	w = img->w * img->zoom;
 	h = img->h * img->zoom;
-	ox = img->x;
-	oy = img->y;
+	tmp_x = img->x;
+	tmp_y = img->y;
 
 	if (w < win->w)
 		img->x = (win->w - w) / 2;
@@ -403,7 +403,7 @@ void img_check_pan(img_t *img, bool moved)
 	else if (img->y + h < win->h)
 		img->y = win->h - h;
 
-	if (!moved && (ox != img->x || oy != img->y))
+	if (!moved && (tmp_x != img->x || tmp_y != img->y))
 		img->dirty = true;
 }
 
@@ -440,12 +440,13 @@ bool img_fit(img_t *img)
 	}
 }
 
+//이미지를 윈도우에 뿌리기 위한 렌더링과정
 void img_render(img_t *img)
 {
 	win_t *win;
-	int sx, sy, sw, sh;
+	int update_x, update_y, update_w, update_h;
 	int dx, dy, dw, dh;
-	Imlib_Image bg;
+	Imlib_Image tmp_img;
 	unsigned long c;
 
 	win = img->win;
@@ -464,26 +465,26 @@ void img_render(img_t *img)
 	*   - full image drawn on part of window
 	*/
 	if (img->x <= 0) {
-		sx = -img->x / img->zoom + 0.5;
-		sw = win->w / img->zoom;
+		update_x = -img->x / img->zoom + 0.5;
+		update_w = win->w / img->zoom;
 		dx = 0;
 		dw = win->w;
 	}
 	else {
-		sx = 0;
-		sw = img->w;
+		update_x = 0;
+		update_w = img->w;
 		dx = img->x;
 		dw = img->w * img->zoom;
 	}
 	if (img->y <= 0) {
-		sy = -img->y / img->zoom + 0.5;
-		sh = win->h / img->zoom;
+		update_y = -img->y / img->zoom + 0.5;
+		update_h = win->h / img->zoom;
 		dy = 0;
 		dh = win->h;
 	}
 	else {
-		sy = 0;
-		sh = img->h;
+		update_y = 0;
+		update_h = img->h;
 		dy = img->y;
 		dh = img->h * img->zoom;
 	}
@@ -495,9 +496,9 @@ void img_render(img_t *img)
 	imlib_context_set_drawable(win->buf.pm);
 
 	if (imlib_image_has_alpha()) {
-		if ((bg = imlib_create_image(dw, dh)) == NULL)
+		if ((tmp_img = imlib_create_image(dw, dh)) == NULL)
 			error(EXIT_FAILURE, ENOMEM, NULL);
-		imlib_context_set_image(bg);
+		imlib_context_set_image(tmp_img);
 		imlib_image_set_has_alpha(0);
 
 		if (img->alpha) {
@@ -518,18 +519,18 @@ void img_render(img_t *img)
 			imlib_image_put_back_data(data);
 		}
 		else {
-			c = win->fullscreen ? win->fscol.pixel : win->bgcol.pixel;
+			c = win->fullscreen ? win->fscol.pixel : win->tmp_imgcol.pixel;
 			imlib_context_set_color(c >> 16 & 0xFF, c >> 8 & 0xFF, c & 0xFF, 0xFF);
 			imlib_image_fill_rectangle(0, 0, dw, dh);
 		}
-		imlib_blend_image_onto_image(img->im, 0, sx, sy, sw, sh, 0, 0, dw, dh);
+		imlib_blend_image_onto_image(img->im, 0, update_x, update_y, update_w, update_h, 0, 0, dw, dh);
 		imlib_context_set_color_modifier(NULL);
 		imlib_render_image_on_drawable(dx, dy);
 		imlib_free_image();
 		imlib_context_set_color_modifier(img->cmod);
 	}
 	else {
-		imlib_render_image_part_on_drawable_at_size(sx, sy, sw, sh, dx, dy, dw, dh);
+		imlib_render_image_part_on_drawable_at_size(update_x, update_y, update_w, update_h, dx, dy, dw, dh);
 	}
 	img->dirty = false;
 }
@@ -623,17 +624,17 @@ bool img_zoom_out(img_t *img)
 
 bool img_pos(img_t *img, float x, float y)
 {
-	float ox, oy;
+	float tmp_x, tmp_y;
 
-	ox = img->x;
-	oy = img->y;
+	tmp_x = img->x;
+	tmp_y = img->y;
 
 	img->x = x;
 	img->y = y;
 
 	img_check_pan(img, true);
 
-	if (ox != img->x || oy != img->y) {
+	if (tmp_x != img->x || tmp_y != img->y) {
 		img->dirty = true;
 		return true;
 	}
@@ -678,10 +679,10 @@ bool img_pan(img_t *img, direction_t dir, int d)
 
 bool img_pan_edge(img_t *img, direction_t dir)
 {
-	float ox, oy;
+	float tmp_x, tmp_y;
 
-	ox = img->x;
-	oy = img->y;
+	tmp_x = img->x;
+	tmp_y = img->y;
 
 	if (dir & DIR_LEFT)
 		img->x = 0;
@@ -694,7 +695,7 @@ bool img_pan_edge(img_t *img, direction_t dir)
 
 	img_check_pan(img, true);
 
-	if (ox != img->x || oy != img->y) {
+	if (tmp_x != img->x || tmp_y != img->y) {
 		img->dirty = true;
 		return true;
 	}
@@ -706,7 +707,7 @@ bool img_pan_edge(img_t *img, direction_t dir)
 void img_rotate(img_t *img, degree_t d)
 {
 	int i, tmp;
-	float ox, oy;
+	float tmp_x, tmp_y;
 
 	imlib_context_set_image(img->im);
 	imlib_image_orientate(d);
@@ -718,11 +719,11 @@ void img_rotate(img_t *img, degree_t d)
 		}
 	}
 	if (d == DEGREE_90 || d == DEGREE_270) {
-		ox = d == DEGREE_90 ? img->x : img->win->w - img->x - img->w * img->zoom;
-		oy = d == DEGREE_270 ? img->y : img->win->h - img->y - img->h * img->zoom;
+		tmp_x = d == DEGREE_90 ? img->x : img->win->w - img->x - img->w * img->zoom;
+		tmp_y = d == DEGREE_270 ? img->y : img->win->h - img->y - img->h * img->zoom;
 
-		img->x = oy + (img->win->w - img->win->h) / 2;
-		img->y = ox + (img->win->h - img->win->w) / 2;
+		img->x = tmp_y + (img->win->w - img->win->h) / 2;
+		img->y = tmp_x + (img->win->h - img->win->w) / 2;
 
 		tmp = img->w;
 		img->w = img->h;
