@@ -196,13 +196,13 @@ bool cg_scroll_screen(arg_t dir)
 -> 마우스 인터럽트를 받은경우 on_buttonpress(버튼이벤트) 함수가 호출됨, config.def.h 소스코드를 참조하면, 마우스 맵핑 관계(button_t buttons[])가 선언되어있는데, 이를 토대로 어떤 키가 눌렸고, 함수를 어떤 인자를 주고 호출해야되는지 알아낸후 해당 함수 호출
 예를들어 '+'버튼을 사용자가 누른경우, kets[] 배열에 의하면 해당 key는 zoom 함수를 +1을 인자로 주어서 호출하라는 뜻(각 함수는 하나의 int형 변수를 인자로 받음)
 */
-bool cg_zoom(arg_t d)
+bool cg_zoom(arg_t isZoomin)
 {
 	if (mode == MODE_THUMB)
-		return tns_zoom(&tns, d);
-	else if (d > 0)
+		return tns_zoom(&tns, isZoomin);
+	else if (isZoomin > 0)
 		return img_zoom_in(&img);
-	else if (d < 0)
+	else if (isZoomin < 0)
 		return img_zoom_out(&img);
 	else
 		return false;
@@ -368,7 +368,7 @@ bool ci_drag(arg_t mode)
 	ox = x;
 	oy = y;
 
-	for (;;) {
+	while (true) {
 		if (mode == DRAG_ABSOLUTE) {
 			px = MIN(MAX(0.0, x - win.w*0.1), win.w*0.8) / (win.w*0.8)
 				* (win.w - img.w * img.zoom);
