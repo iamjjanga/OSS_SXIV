@@ -71,15 +71,12 @@ void parse_options(int argc, char **argv)
 	_options.thumb_mode = false;
 	_options.clean_cache = false;
 	_options.private_mode = false;
-<<<<<<< HEAD
 
 	_options.change_format = false;
 	_options.convert_filename = NULL;
 
-=======
 	opt = getopt(argc, argv, "A:abce:fG:g:hin:N:opqrS:s:tvZz:"));
 	while ((opt != -1) {
->>>>>>> ywkim_Cleancode_option
 		switch (opt) {
 			case '?':
 				print_usage();
