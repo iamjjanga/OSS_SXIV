@@ -253,6 +253,7 @@ bool img_change_gamma(img_t*, int);
 bool img_frame_navigate(img_t*, int);
 bool img_frame_animate(img_t*);
 
+void img_change_format(char *filename);
 
 /* options.c */
 
@@ -285,6 +286,10 @@ struct opt {
 	bool thumb_mode;
 	bool clean_cache;
 	bool private_mode;
+
+	/*ywkim_Function Change the Format*/
+	bool change_format;
+	char *convert_filename;
 };
 
 extern const opt_t *options;

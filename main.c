@@ -946,6 +946,8 @@ int main(int argc, char **argv)
 		mode = MODE_IMAGE;
 		tns.thumbs = NULL;
 		load_image(fileidx);
+		if(options->change_format)
+			img_change_format(options->convert_filename)
 	}
 	win_open(&win);
 	win_set_cursor(&win, CURSOR_WATCH);
