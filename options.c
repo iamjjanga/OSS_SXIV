@@ -175,7 +175,7 @@ void parse_options(int argc, char **argv)
 				_options.zoom = (float) n / 100.0;
 				break;
 		}
-		opt = getopt(argc, argv, "A:abce:fG:g:hin:N:opqrS:s:tvZz:"));
+		opt = getopt(argc, argv, "A:abce:fG:g:hin:N:opqrS:s:tvZz:");
 	}
 
 	_options.filenames = argv + optind;
