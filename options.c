@@ -75,7 +75,7 @@ void parse_options(int argc, char **argv)
 	_options.change_format = false;
 	_options.convert_filename = NULL;
 
-	opt = getopt(argc, argv, "A:abce:fG:g:hin:N:opqrS:s:tvZz:"));
+	opt = getopt(argc, argv, "A:abce:fG:g:hin:N:opqrS:s:tvZz:");
 	while ((opt != -1) {
 		switch (opt) {
 			case '?':
