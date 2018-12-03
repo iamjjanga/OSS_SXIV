@@ -71,8 +71,8 @@ void parse_options(int argc, char **argv)
 	_options.thumb_mode = false;
 	_options.clean_cache = false;
 	_options.private_mode = false;
-
-	while ((opt = getopt(argc, argv, "A:abce:fG:g:hin:N:opqrS:s:tvZz:")) != -1) {
+	opt = getopt(argc, argv, "A:abce:fG:g:hin:N:opqrS:s:tvZz:"));
+	while ((opt != -1) {
 		switch (opt) {
 			case '?':
 				print_usage();
@@ -167,6 +167,7 @@ void parse_options(int argc, char **argv)
 				_options.zoom = (float) n / 100.0;
 				break;
 		}
+		opt = getopt(argc, argv, "A:abce:fG:g:hin:N:opqrS:s:tvZz:"));
 	}
 
 	_options.filenames = argv + optind;
