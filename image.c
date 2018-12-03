@@ -54,6 +54,18 @@ static int zoomdiff(img_t *img, float z)
 	return (int)((img->w + img->h) * (z - img->zoom));
 }
 
+void img_change_format(char *filename)
+{
+	char *tmp;
+	tmp = strrchr(filename, '.');
+	if (tmp)
+		imlib_image_set_format(tmp + 1);
+	imlib_save_image(filename);
+	return;
+
+}
+
+
 void img_init(img_t *img, win_t *win)
 {
 	zoom_min = zoom_levels[0] / MAX_ZOOM_LEVEL;
